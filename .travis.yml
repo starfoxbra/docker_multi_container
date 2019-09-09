@@ -1,0 +1,20 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t pedroaoki/react:latest -f ./client/DockerFile.dev ./client
+
+script:
+  - docker run -e CI=true pedroaoki/react npm run test -- --coverage
+
+after_success:
+  - docker build -t pedroaoki/multi-client:latest  ./client
+  - docker build -t pedroaoki/multi-nginx:latest  ./nginx
+  - docker build -t pedroaoki/multi-server:latest  ./server
+  - docker build -t pedroaoki/multi-worker:latest  ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password -stdin
+  - docker push pedroaoki/multi-client
+  - docker push pedroaoki/multi-nginx
+  - docker push pedroaoki/multi-server
+  - docker push pedroaoki/multi-worker
